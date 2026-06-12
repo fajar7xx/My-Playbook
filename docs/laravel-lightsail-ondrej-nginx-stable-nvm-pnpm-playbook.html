@@ -1,0 +1,1216 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Reusable Laravel Lightsail Deployment Playbook — Ubuntu 24.04 + Ondřej PHP + Nginx Stable</title>
+  <style>
+    :root{
+      --bg:#08111f;--panel:#111b2e;--panel2:#17243b;--text:#edf4ff;--muted:#a9b8d6;
+      --line:#2a3b59;--accent:#38bdf8;--accent2:#22c55e;--warn:#f59e0b;--danger:#fb7185;
+      --code:#060b14;--radius:18px;--shadow:0 16px 42px rgba(0,0,0,.35)
+    }
+    *{box-sizing:border-box}html{scroll-behavior:smooth}
+    body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:radial-gradient(circle at top left,rgba(56,189,248,.18),transparent 34rem),radial-gradient(circle at top right,rgba(34,197,94,.12),transparent 36rem),var(--bg);color:var(--text);line-height:1.65}
+    a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+    .layout{display:grid;grid-template-columns:330px 1fr;min-height:100vh}
+    aside{position:sticky;top:0;height:100vh;overflow:auto;background:rgba(7,12,24,.88);backdrop-filter:blur(14px);border-right:1px solid var(--line);padding:22px}
+    main{max-width:1220px;padding:36px}
+    .brand{display:flex;gap:12px;align-items:center;margin-bottom:18px}
+    .logo{width:42px;height:42px;border-radius:14px;background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 8px 28px rgba(56,189,248,.24)}
+    .brand h1{font-size:15px;line-height:1.25;margin:0}.brand span{display:block;color:var(--muted);font-size:12px;font-weight:500}
+    .searchbar{width:100%;padding:13px 14px;border-radius:14px;border:1px solid var(--line);background:rgba(6,11,20,.8);color:var(--text);margin:10px 0 14px}
+    nav a{display:block;color:var(--muted);padding:8px 10px;border-radius:10px;font-size:13px;margin:2px 0;border:1px solid transparent}
+    nav a:hover,nav a.active{color:var(--text);background:rgba(56,189,248,.09);border-color:rgba(56,189,248,.24);text-decoration:none}
+    .hero,section{border:1px solid var(--line);border-radius:var(--radius);background:linear-gradient(180deg,rgba(23,36,59,.88),rgba(17,27,46,.83));box-shadow:var(--shadow)}
+    .hero{padding:34px;margin-bottom:24px}.eyebrow{color:var(--accent);font-weight:800;letter-spacing:.08em;text-transform:uppercase;font-size:12px}
+    h1,h2,h3{line-height:1.2}.hero h1{font-size:36px;margin:10px 0 12px}.hero p{color:var(--muted);max-width:930px;margin:0 0 16px}
+    section{padding:28px;margin:22px 0}h2{font-size:25px;margin:0 0 16px}h3{font-size:18px;margin:26px 0 12px}
+    p,li,td{color:var(--muted)}strong{color:var(--text)}code{font-family:"JetBrains Mono","SFMono-Regular",Consolas,monospace;font-size:13px}
+    .grid{display:grid;gap:14px}.grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}.grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+    .card{background:rgba(23,36,59,.68);border:1px solid var(--line);border-radius:16px;padding:16px}.card h3{margin-top:0}
+    .pill{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:rgba(56,189,248,.08);padding:7px 10px;border-radius:999px;color:var(--text);font-size:12px;font-weight:800;margin:4px 6px 4px 0}
+    .notice{border-left:4px solid var(--accent);background:rgba(56,189,248,.08);padding:14px 16px;border-radius:12px;margin:14px 0;color:var(--muted)}
+    .notice.warn{border-left-color:var(--warn);background:rgba(245,158,11,.08)}.notice.danger{border-left-color:var(--danger);background:rgba(251,113,133,.08)}
+    .codebox{position:relative;margin:14px 0}.code-title{display:flex;align-items:center;justify-content:space-between;background:#09101f;border:1px solid var(--line);border-bottom:0;border-radius:14px 14px 0 0;padding:10px 12px;color:var(--muted);font-size:12px}
+    pre{margin:0;white-space:pre-wrap;word-break:break-word;background:var(--code);border:1px solid var(--line);border-radius:0 0 14px 14px;padding:16px;overflow:auto;color:#dbeafe}
+    .copy{border:1px solid var(--line);background:rgba(56,189,248,.10);color:var(--text);border-radius:9px;padding:6px 9px;cursor:pointer;font-size:12px}.copy:hover{background:rgba(56,189,248,.18)}
+    table{width:100%;border-collapse:collapse;margin:14px 0;overflow:hidden;border-radius:12px}th,td{border:1px solid var(--line);padding:10px;text-align:left;vertical-align:top}th{background:rgba(56,189,248,.08);color:var(--text)}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 16px}.tab{border:1px solid var(--line);background:rgba(23,36,59,.72);color:var(--muted);border-radius:999px;padding:8px 12px;cursor:pointer}.tab.active{color:var(--text);border-color:rgba(56,189,248,.55);background:rgba(56,189,248,.12)}
+    .tab-panel{display:none}.tab-panel.active{display:block}
+    .checklist label{display:flex;gap:10px;align-items:flex-start;padding:10px;border:1px solid var(--line);border-radius:12px;background:rgba(23,36,59,.55);margin:8px 0;color:var(--muted)}.checklist input{margin-top:4px;accent-color:var(--accent2)}
+    .kbd{font-family:monospace;background:#09101f;border:1px solid var(--line);border-radius:6px;padding:2px 6px;color:var(--text)}
+    .footer{color:var(--muted);font-size:13px;margin:24px 0 60px}
+    @media(max-width:900px){.layout{grid-template-columns:1fr}aside{position:relative;height:auto}main{padding:18px}.grid.two,.grid.three{grid-template-columns:1fr}.hero h1{font-size:28px}}
+    @media print{body{background:white;color:#111}aside,.copy,.searchbar,.tabs{display:none}main{max-width:none;padding:0}.hero,section{box-shadow:none;border-color:#ddd;background:white;color:#111;break-inside:avoid}p,li,td{color:#333}pre{background:#f7f7f7;color:#111;border-color:#ddd}}
+  </style>
+</head>
+<body>
+<div class="layout">
+<aside>
+  <div class="brand"><div class="logo"></div><h1>Laravel Lightsail Playbook <span>Reusable · Ondřej PHP · Nginx Stable</span></h1></div>
+  <input class="searchbar" id="search" placeholder="Cari setup / command..." />
+  <nav id="nav">
+    <a href="#overview">Overview</a>
+    <a href="#variables">Variabel Project</a>
+    <a href="#lightsail">Lightsail Firewall</a>
+    <a href="#base">Fresh Server</a>
+    <a href="#nginx-stable">Nginx Stable Official</a>
+    <a href="#php-ondrej">PHP 8.4 Ondřej</a>
+    <a href="#php-modules">PHP Module Matrix</a>
+    <a href="#php-optimize">PHP-FPM & OPcache</a>
+    <a href="#node-nvm">Node.js via NVM + npm/pnpm</a>
+    <a href="#database">Database Options</a>
+    <a href="#redis">Redis</a>
+    <a href="#project">Setup Project</a>
+    <a href="#permissions">Permission</a>
+    <a href="#env">ENV Templates</a>
+    <a href="#nginx-laravel">Nginx Laravel :8000</a>
+    <a href="#deploy">Deploy Script</a>
+    <a href="#horizon">Horizon</a>
+    <a href="#telescope">Telescope</a>
+    <a href="#production-support">Production-ready Support</a>
+    <a href="#troubleshooting">Troubleshooting</a>
+    <a href="#checklist">Checklist</a>
+  </nav>
+</aside>
+
+<main>
+  <div class="hero" id="overview">
+    <div class="eyebrow">Reusable Laravel Deployment Documentation</div>
+    <h1>Fresh Install → Laravel Deployment di AWS Lightsail</h1>
+    <p>
+      Target: <strong>Ubuntu 24.04 LTS</strong>, <strong>PHP 8.4 hanya dari Ondřej PHP PPA</strong>,
+      <strong>Nginx official stable dari nginx.org</strong>, database fleksibel, Redis, Horizon, Telescope,
+      dan staging via <strong>http://IP_PUBLIC:8000</strong>.
+    </p>
+    <span class="pill">✅ No php.new</span>
+    <span class="pill">✅ Ondřej PHP only</span>
+    <span class="pill">✅ Nginx stable official</span>
+    <span class="pill">✅ MySQL/MariaDB/Postgres/MongoDB/SQL Server</span>
+    <span class="pill">✅ Redis + Horizon + Telescope</span>
+    <span class="pill">✅ Reusable PROJECT_NAME</span>
+    <div class="notice">
+      Dokumentasi ini sengaja memakai variabel <code>PROJECT_NAME</code>, <code>PROJECT_PATH</code>, dan <code>PUBLIC_IP</code>.
+      Jadi saat setup project baru, kamu wajib menentukan nama project terlebih dahulu, bukan mengandalkan contoh nama tertentu.
+    </div>
+  </div>
+
+  <section id="variables">
+    <h2>1. Tentukan Nama Project Dulu</h2>
+    <p>Setiap setup project dimulai dari deklarasi nama project. Contoh di bawah bisa diganti untuk project apa pun.</p>
+    <div class="codebox"><div class="code-title"><span>Project variables — wajib dicek sebelum lanjut</span><button class="copy">Copy</button></div>
+<pre><code># GANTI SESUAI PROJECT KAMU
+export PROJECT_NAME="nama_project_kamu"
+export PROJECT_REPO="git@github.com:username/repository.git"
+export PROJECT_BRANCH="main"
+export PROJECT_BASE="/var/www"
+export PROJECT_PATH="${PROJECT_BASE}/${PROJECT_NAME}"
+export PUBLIC_IP="YOUR_LIGHTSAIL_PUBLIC_IP"
+export APP_PORT="8000"
+export PHP_VERSION="8.4"
+
+# Database default; boleh diganti sesuai opsi database
+export DB_CONNECTION="mysql"
+export DB_NAME="${PROJECT_NAME}_db"
+export DB_USER="${PROJECT_NAME}_user"
+export DB_PASSWORD="CHANGE_THIS_STRONG_PASSWORD"
+
+echo "Project name : ${PROJECT_NAME}"
+echo "Project path : ${PROJECT_PATH}"
+echo "App URL      : http://${PUBLIC_IP}:${APP_PORT}"</code></pre></div>
+
+    <div class="notice warn">
+      Jangan lanjut kalau <code>PROJECT_NAME</code> masih kosong atau masih contoh. Semua file Nginx, database user, deploy script, Supervisor, dan log akan memakai nama ini.
+    </div>
+  </section>
+
+  <section id="lightsail">
+    <h2>2. AWS Lightsail Firewall</h2>
+    <table>
+      <tr><th>Port</th><th>Protocol</th><th>Source</th><th>Kegunaan</th></tr>
+      <tr><td>22</td><td>TCP</td><td>IP kamu saja</td><td>SSH</td></tr>
+      <tr><td>8000</td><td>TCP</td><td>IP kamu / Anywhere sementara</td><td>Laravel staging</td></tr>
+      <tr><td>80</td><td>TCP</td><td>Anywhere</td><td>Opsional untuk HTTP/domain</td></tr>
+      <tr><td>443</td><td>TCP</td><td>Anywhere</td><td>Opsional untuk HTTPS</td></tr>
+    </table>
+    <p>Jika database lokal, jangan buka port database ke public. Kalau database external seperti Supabase/Neon, Laravel melakukan outbound connection; inbound DB port di Lightsail tidak perlu dibuka.</p>
+  </section>
+
+  <section id="base">
+    <h2>3. Fresh Server Setup</h2>
+    <div class="codebox"><div class="code-title"><span>SSH</span><button class="copy">Copy</button></div>
+<pre><code>ssh ubuntu@YOUR_LIGHTSAIL_PUBLIC_IP</code></pre></div>
+
+    <div class="codebox"><div class="code-title"><span>Update & base utilities</span><button class="copy">Copy</button></div>
+<pre><code>sudo apt update && sudo apt upgrade -y
+
+sudo apt install -y \
+software-properties-common \
+ca-certificates \
+lsb-release \
+apt-transport-https \
+curl \
+wget \
+git \
+unzip \
+zip \
+nano \
+vim \
+htop \
+ufw \
+fail2ban \
+supervisor \
+cron \
+acl \
+jq \
+build-essential \
+pkg-config
+
+sudo timedatectl set-timezone Asia/Jakarta</code></pre></div>
+  </section>
+
+  <section id="nginx-stable">
+    <h2>4. Install Nginx Terbaru Stable dari nginx.org</h2>
+    <p>Ini memakai repository official stable dari nginx.org, bukan package default Ubuntu.</p>
+    <div class="codebox"><div class="code-title"><span>Remove Nginx bawaan jika sudah ada</span><button class="copy">Copy</button></div>
+<pre><code>sudo systemctl stop nginx || true
+sudo apt remove -y nginx nginx-common nginx-core || true
+sudo apt autoremove -y</code></pre></div>
+
+    <div class="codebox"><div class="code-title"><span>Setup Nginx official stable repo</span><button class="copy">Copy</button></div>
+<pre><code>sudo apt install -y curl gnupg2 ca-certificates lsb-release ubuntu-keyring
+
+curl https://nginx.org/keys/nginx_signing.key | gpg --dearmor \
+  | sudo tee /usr/share/keyrings/nginx-archive-keyring.gpg >/dev/null
+
+gpg --dry-run --quiet --no-keyring --import --import-options import-show \
+  /usr/share/keyrings/nginx-archive-keyring.gpg
+
+echo "deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] https://nginx.org/packages/ubuntu $(lsb_release -cs) nginx" \
+  | sudo tee /etc/apt/sources.list.d/nginx.list
+
+echo -e "Package: *\nPin: origin nginx.org\nPin: release o=nginx\nPin-Priority: 900\n" \
+  | sudo tee /etc/apt/preferences.d/99nginx
+
+sudo apt update
+sudo apt install -y nginx
+
+sudo systemctl enable nginx
+sudo systemctl start nginx
+nginx -v
+sudo systemctl status nginx</code></pre></div>
+
+    <div class="notice">
+      Official nginx docs menyediakan repository stable untuk Ubuntu 24.04 “noble” dan instruksi repo pinning agar package nginx.org diprioritaskan dibanding package distribusi.
+    </div>
+  </section>
+
+  <section id="php-ondrej">
+    <h2>5. Install PHP 8.4 hanya dari Ondřej PHP PPA</h2>
+    <div class="notice danger">
+      Versi ini tidak memakai <code>php.new</code>. Jika sebelumnya pernah install via <code>php.new</code>, bersihkan PATH/symlink user agar <code>which php</code> mengarah ke <code>/usr/bin/php</code>.
+    </div>
+
+    <div class="codebox"><div class="code-title"><span>Opsional: disable php.new / herd-lite dari PATH user</span><button class="copy">Copy</button></div>
+<pre><code># Cek dulu
+which php
+php -v
+
+# Jika masih mengarah ke ~/.config/herd-lite/bin/php, edit ~/.bashrc atau ~/.profile
+nano ~/.bashrc
+
+# Hapus/comment baris yang menambahkan ~/.config/herd-lite/bin ke PATH, lalu:
+source ~/.bashrc
+hash -r</code></pre></div>
+
+    <div class="codebox"><div class="code-title"><span>Tambahkan Ondřej PHP PPA</span><button class="copy">Copy</button></div>
+<pre><code>sudo apt update
+sudo apt install -y software-properties-common ca-certificates lsb-release apt-transport-https
+sudo LC_ALL=C.UTF-8 add-apt-repository ppa:ondrej/php -y
+sudo apt update</code></pre></div>
+
+    <div class="codebox"><div class="code-title"><span>Install PHP 8.4 lengkap untuk Laravel</span><button class="copy">Copy</button></div>
+<pre><code>sudo apt install -y \
+php8.4 \
+php8.4-cli \
+php8.4-fpm \
+php8.4-common \
+php8.4-dev \
+php8.4-pear \
+php8.4-opcache \
+php8.4-readline \
+php8.4-curl \
+php8.4-mbstring \
+php8.4-xml \
+php8.4-zip \
+php8.4-bcmath \
+php8.4-intl \
+php8.4-gd \
+php8.4-imagick \
+php8.4-soap \
+php8.4-imap \
+php8.4-ldap \
+php8.4-tidy \
+php8.4-mysql \
+php8.4-pgsql \
+php8.4-sqlite3 \
+php8.4-redis \
+php8.4-mongodb \
+php8.4-apcu \
+php8.4-igbinary \
+php8.4-msgpack \
+php8.4-uuid
+
+sudo update-alternatives --set php /usr/bin/php8.4 || true
+sudo systemctl enable php8.4-fpm
+sudo systemctl start php8.4-fpm
+
+php -v
+php -m
+sudo systemctl status php8.4-fpm
+ls -la /run/php</code></pre></div>
+
+    <h3>Composer dari apt / official installer</h3>
+    <div class="codebox"><div class="code-title"><span>Install Composer official</span><button class="copy">Copy</button></div>
+<pre><code>cd ~
+php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+php composer-setup.php
+sudo mv composer.phar /usr/local/bin/composer
+rm composer-setup.php
+
+composer --version</code></pre></div>
+  </section>
+
+  <section id="php-modules">
+    <h2>6. PHP Module Matrix untuk Laravel</h2>
+    <table>
+      <tr><th>Kebutuhan</th><th>Package/Extension</th><th>Catatan</th></tr>
+      <tr><td>Laravel core</td><td><code>ctype curl dom fileinfo filter hash mbstring openssl pcre pdo session tokenizer xml</code></td><td>Sebagian built-in, sebagian dari <code>php8.4-xml</code>, <code>php8.4-curl</code>, <code>php8.4-mbstring</code>.</td></tr>
+      <tr><td>MySQL / MariaDB</td><td><code>php8.4-mysql</code></td><td>Menyediakan <code>pdo_mysql</code>. Dipakai untuk MySQL dan MariaDB.</td></tr>
+      <tr><td>PostgreSQL / Supabase / Neon</td><td><code>php8.4-pgsql</code></td><td>Menyediakan <code>pdo_pgsql</code> dan <code>pgsql</code>.</td></tr>
+      <tr><td>SQLite</td><td><code>php8.4-sqlite3</code></td><td>Useful untuk local/simple staging.</td></tr>
+      <tr><td>Redis / Horizon</td><td><code>php8.4-redis</code>, <code>php8.4-igbinary</code>, <code>php8.4-msgpack</code></td><td>Redis extension + serializer optimization.</td></tr>
+      <tr><td>MongoDB</td><td><code>php8.4-mongodb</code></td><td>Untuk Laravel MongoDB driver/package.</td></tr>
+      <tr><td>SQL Server</td><td><code>sqlsrv</code>, <code>pdo_sqlsrv</code> via PECL + Microsoft ODBC</td><td>Butuh <code>php8.4-dev</code>, <code>php8.4-pear</code>, <code>unixodbc-dev</code>, dan ODBC Driver Microsoft.</td></tr>
+      <tr><td>Images</td><td><code>php8.4-gd</code>, <code>php8.4-imagick</code></td><td>Upload resize, thumbnail, image processing.</td></tr>
+      <tr><td>Performance</td><td><code>php8.4-opcache</code>, <code>php8.4-apcu</code></td><td>OPcache wajib untuk production-like staging.</td></tr>
+      <tr><td>Mail/legacy integration</td><td><code>php8.4-imap</code>, <code>php8.4-soap</code>, <code>php8.4-ldap</code></td><td>Opsional sesuai kebutuhan aplikasi.</td></tr>
+    </table>
+
+    <h3>SQL Server Driver untuk PHP 8.4</h3>
+    <div class="notice">
+      Microsoft PHP SQL Server driver terbaru mendukung PHP 8.4 dan Ubuntu 24.04. Gunakan hanya jika aplikasi benar-benar perlu konek ke SQL Server.
+    </div>
+    <div class="codebox"><div class="code-title"><span>Install Microsoft ODBC + sqlsrv/pdo_sqlsrv</span><button class="copy">Copy</button></div>
+<pre><code># Microsoft ODBC repository untuk Ubuntu 24.04
+curl -sSL -O https://packages.microsoft.com/config/ubuntu/24.04/packages-microsoft-prod.deb
+sudo dpkg -i packages-microsoft-prod.deb
+rm packages-microsoft-prod.deb
+
+sudo apt update
+sudo ACCEPT_EULA=Y apt install -y msodbcsql18 mssql-tools18 unixodbc-dev
+
+# PECL driver untuk PHP 8.4
+sudo pecl config-set php_ini /etc/php/8.4/fpm/php.ini
+sudo pecl install sqlsrv
+sudo pecl install pdo_sqlsrv
+
+sudo bash -c 'printf "; priority=20\nextension=sqlsrv.so\n" > /etc/php/8.4/mods-available/sqlsrv.ini'
+sudo bash -c 'printf "; priority=30\nextension=pdo_sqlsrv.so\n" > /etc/php/8.4/mods-available/pdo_sqlsrv.ini'
+
+sudo phpenmod -v 8.4 sqlsrv pdo_sqlsrv
+
+ls /etc/php/8.4/fpm/conf.d/*sqlsrv.ini
+php -m | grep -Ei "sqlsrv|pdo_sqlsrv"
+
+sudo systemctl restart php8.4-fpm</code></pre></div>
+
+    <h3>Verifikasi semua module penting</h3>
+    <div class="codebox"><div class="code-title"><span>Module check</span><button class="copy">Copy</button></div>
+<pre><code>php -m | grep -Ei "ctype|curl|dom|fileinfo|filter|hash|mbstring|openssl|pcre|pdo|session|tokenizer|xml"
+php -m | grep -Ei "mysql|pdo_mysql|pgsql|pdo_pgsql|sqlite|redis|mongodb|sqlsrv|pdo_sqlsrv|gd|imagick|opcache|apcu|igbinary|msgpack"</code></pre></div>
+  </section>
+
+  <section id="php-optimize">
+    <h2>7. PHP-FPM & OPcache Optimization</h2>
+    <h3>7.1 PHP ini production-like</h3>
+    <div class="codebox"><div class="code-title"><span>Edit PHP-FPM php.ini</span><button class="copy">Copy</button></div>
+<pre><code>sudo nano /etc/php/8.4/fpm/php.ini</code></pre></div>
+    <div class="codebox"><div class="code-title"><span>Recommended php.ini values</span><button class="copy">Copy</button></div>
+<pre><code>memory_limit = 256M
+upload_max_filesize = 32M
+post_max_size = 32M
+max_execution_time = 60
+max_input_vars = 3000
+date.timezone = Asia/Jakarta
+
+opcache.enable=1
+opcache.enable_cli=1
+opcache.memory_consumption=128
+opcache.interned_strings_buffer=16
+opcache.max_accelerated_files=20000
+opcache.validate_timestamps=0
+opcache.save_comments=1
+opcache.jit=off</code></pre></div>
+
+    <h3>7.2 PHP-FPM pool tuning untuk Lightsail kecil</h3>
+    <div class="codebox"><div class="code-title"><span>Edit FPM pool</span><button class="copy">Copy</button></div>
+<pre><code>sudo nano /etc/php/8.4/fpm/pool.d/www.conf</code></pre></div>
+    <div class="codebox"><div class="code-title"><span>Recommended www.conf</span><button class="copy">Copy</button></div>
+<pre><code>user = www-data
+group = www-data
+listen = /run/php/php8.4-fpm.sock
+listen.owner = www-data
+listen.group = www-data
+listen.mode = 0660
+
+pm = dynamic
+pm.max_children = 8
+pm.start_servers = 2
+pm.min_spare_servers = 1
+pm.max_spare_servers = 3
+pm.max_requests = 500
+
+request_terminate_timeout = 120s
+catch_workers_output = yes</code></pre></div>
+
+    <div class="codebox"><div class="code-title"><span>Restart PHP-FPM</span><button class="copy">Copy</button></div>
+<pre><code>sudo systemctl restart php8.4-fpm
+sudo systemctl status php8.4-fpm</code></pre></div>
+
+    <div class="notice warn">
+      Jika <code>opcache.validate_timestamps=0</code>, setiap deploy harus restart PHP-FPM agar file PHP terbaru kebaca.
+    </div>
+  </section>
+
+
+  <section id="node-nvm">
+    <h2>8. Node.js via NVM + npm/pnpm</h2>
+    <p>
+      Untuk Laravel/Vite, install Node.js lewat <strong>NVM</strong> agar versi Node bisa dikontrol per server/project.
+      Package manager bisa pilih salah satu: <strong>npm</strong> bawaan Node, atau <strong>pnpm</strong> untuk install lebih cepat dan hemat disk.
+    </p>
+
+    <div class="notice">
+      Rekomendasi default: pakai <code>nvm install --lts</code>, lalu gunakan package manager sesuai lockfile project:
+      <code>package-lock.json</code> → npm, <code>pnpm-lock.yaml</code> → pnpm.
+    </div>
+
+    <h3>8.1 Install NVM untuk user deploy</h3>
+    <div class="codebox"><div class="code-title"><span>Install NVM</span><button class="copy">Copy</button></div>
+<pre><code># Jalankan sebagai user ubuntu, bukan root
+cd ~
+
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+
+# Load NVM tanpa logout
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+
+nvm --version</code></pre></div>
+
+    <h3>8.2 Install Node.js LTS</h3>
+    <div class="codebox"><div class="code-title"><span>Install latest LTS Node.js</span><button class="copy">Copy</button></div>
+<pre><code>nvm install --lts
+nvm use --lts
+nvm alias default 'lts/*'
+
+node -v
+npm -v
+which node
+which npm</code></pre></div>
+
+    <h3>8.3 Optional: pin Node version per project</h3>
+    <div class="codebox"><div class="code-title"><span>Buat .nvmrc di project</span><button class="copy">Copy</button></div>
+<pre><code>cd "${PROJECT_PATH}"
+
+# Gunakan major LTS yang sedang kamu pakai, contoh:
+node -v | sed 's/v//' > .nvmrc
+
+cat .nvmrc
+
+# Berikutnya cukup:
+nvm use</code></pre></div>
+
+    <h3>8.4 Pilihan A — pakai npm</h3>
+    <p>Pakai ini kalau project punya <code>package-lock.json</code> atau kamu ingin setup paling standar.</p>
+    <div class="codebox"><div class="code-title"><span>Install/build dengan npm</span><button class="copy">Copy</button></div>
+<pre><code>cd "${PROJECT_PATH}"
+
+nvm use
+
+# Untuk fresh install production-like
+npm ci
+
+# Jika belum ada package-lock.json, gunakan:
+# npm install
+
+npm run build</code></pre></div>
+
+    <h3>8.5 Pilihan B — pakai pnpm</h3>
+    <p>Pakai ini kalau project punya <code>pnpm-lock.yaml</code> atau kamu ingin install dependency lebih cepat dan efisien.</p>
+    <div class="codebox"><div class="code-title"><span>Enable pnpm via Corepack</span><button class="copy">Copy</button></div>
+<pre><code># Node modern menyertakan Corepack, tapi bisa perlu di-enable
+corepack enable
+
+# Aktifkan pnpm terbaru yang stabil menurut Corepack
+corepack prepare pnpm@latest --activate
+
+pnpm -v</code></pre></div>
+
+    <div class="codebox"><div class="code-title"><span>Install/build dengan pnpm</span><button class="copy">Copy</button></div>
+<pre><code>cd "${PROJECT_PATH}"
+
+nvm use
+
+# Jika package.json punya packageManager, Corepack akan mengikuti versi itu.
+pnpm install --frozen-lockfile
+
+# Jika belum ada pnpm-lock.yaml, gunakan:
+# pnpm install
+
+pnpm run build</code></pre></div>
+
+    <h3>8.6 Auto-detect npm atau pnpm saat deploy</h3>
+    <div class="codebox"><div class="code-title"><span>Reusable asset build snippet</span><button class="copy">Copy</button></div>
+<pre><code>cd "${PROJECT_PATH}"
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
+if [ -f ".nvmrc" ]; then
+  nvm install
+  nvm use
+else
+  nvm install --lts
+  nvm use --lts
+fi
+
+if [ -f "pnpm-lock.yaml" ]; then
+  corepack enable
+  corepack prepare pnpm@latest --activate
+  pnpm install --frozen-lockfile
+  pnpm run build
+elif [ -f "package-lock.json" ]; then
+  npm ci
+  npm run build
+else
+  npm install
+  npm run build
+fi</code></pre></div>
+
+    <div class="notice warn">
+      Jangan install Node dari <code>apt install nodejs npm</code> jika dokumentasi ini memakai NVM. Campuran apt Node + NVM sering bikin versi Node/NPM berbeda antara SSH session dan deploy script.
+    </div>
+  </section>
+
+  <section id="database">
+    <h2>9. Database Options</h2>
+    <div class="tabs">
+      <button class="tab active" data-tab="mysql-local">MySQL Local</button>
+      <button class="tab" data-tab="mariadb-local">MariaDB Local</button>
+      <button class="tab" data-tab="postgres-local">PostgreSQL Local</button>
+      <button class="tab" data-tab="supabase-neon">Supabase / Neon</button>
+      <button class="tab" data-tab="mongodb">MongoDB</button>
+    </div>
+
+    <div class="tab-panel active" id="mysql-local">
+      <div class="codebox"><div class="code-title"><span>Install MySQL local</span><button class="copy">Copy</button></div>
+<pre><code>sudo apt install -y mysql-server
+sudo systemctl enable mysql
+sudo systemctl start mysql
+sudo mysql_secure_installation</code></pre></div>
+      <div class="codebox"><div class="code-title"><span>Create database/user using PROJECT_NAME</span><button class="copy">Copy</button></div>
+<pre><code>sudo mysql
+
+CREATE DATABASE nama_project_kamu_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'nama_project_kamu_user'@'localhost' IDENTIFIED BY 'CHANGE_THIS_STRONG_PASSWORD';
+GRANT ALL PRIVILEGES ON nama_project_kamu_db.* TO 'nama_project_kamu_user'@'localhost';
+FLUSH PRIVILEGES;
+EXIT;</code></pre></div>
+      <div class="codebox"><div class="code-title"><span>.env MySQL local</span><button class="copy">Copy</button></div>
+<pre><code>DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=nama_project_kamu_db
+DB_USERNAME=nama_project_kamu_user
+DB_PASSWORD=CHANGE_THIS_STRONG_PASSWORD</code></pre></div>
+    </div>
+
+    <div class="tab-panel" id="mariadb-local">
+      <div class="codebox"><div class="code-title"><span>Install MariaDB local</span><button class="copy">Copy</button></div>
+<pre><code>sudo apt install -y mariadb-server mariadb-client
+sudo systemctl enable mariadb
+sudo systemctl start mariadb
+sudo mysql_secure_installation</code></pre></div>
+      <div class="codebox"><div class="code-title"><span>.env MariaDB local</span><button class="copy">Copy</button></div>
+<pre><code>DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=nama_project_kamu_db
+DB_USERNAME=nama_project_kamu_user
+DB_PASSWORD=CHANGE_THIS_STRONG_PASSWORD</code></pre></div>
+      <div class="notice">Laravel tetap memakai <code>DB_CONNECTION=mysql</code> untuk MariaDB karena driver-nya <code>pdo_mysql</code>.</div>
+    </div>
+
+    <div class="tab-panel" id="postgres-local">
+      <div class="codebox"><div class="code-title"><span>Install PostgreSQL local</span><button class="copy">Copy</button></div>
+<pre><code>sudo apt install -y postgresql postgresql-contrib
+sudo systemctl enable postgresql
+sudo systemctl start postgresql</code></pre></div>
+      <div class="codebox"><div class="code-title"><span>Create PostgreSQL DB/user</span><button class="copy">Copy</button></div>
+<pre><code>sudo -u postgres psql
+
+CREATE DATABASE nama_project_kamu_db;
+CREATE USER nama_project_kamu_user WITH ENCRYPTED PASSWORD 'CHANGE_THIS_STRONG_PASSWORD';
+GRANT ALL PRIVILEGES ON DATABASE nama_project_kamu_db TO nama_project_kamu_user;
+\q</code></pre></div>
+      <div class="codebox"><div class="code-title"><span>.env PostgreSQL local</span><button class="copy">Copy</button></div>
+<pre><code>DB_CONNECTION=pgsql
+DB_HOST=127.0.0.1
+DB_PORT=5432
+DB_DATABASE=nama_project_kamu_db
+DB_USERNAME=nama_project_kamu_user
+DB_PASSWORD=CHANGE_THIS_STRONG_PASSWORD</code></pre></div>
+    </div>
+
+    <div class="tab-panel" id="supabase-neon">
+      <h3>Supabase</h3>
+      <div class="codebox"><div class="code-title"><span>.env Supabase</span><button class="copy">Copy</button></div>
+<pre><code>DB_CONNECTION=pgsql
+DB_HOST=YOUR_SUPABASE_DB_HOST
+DB_PORT=5432
+DB_DATABASE=postgres
+DB_USERNAME=postgres
+DB_PASSWORD=YOUR_SUPABASE_DB_PASSWORD
+DB_SSLMODE=require</code></pre></div>
+
+      <h3>Neon</h3>
+      <div class="codebox"><div class="code-title"><span>.env Neon</span><button class="copy">Copy</button></div>
+<pre><code>DB_CONNECTION=pgsql
+DB_HOST=YOUR_NEON_HOST
+DB_PORT=5432
+DB_DATABASE=YOUR_NEON_DATABASE
+DB_USERNAME=YOUR_NEON_USERNAME
+DB_PASSWORD=YOUR_NEON_PASSWORD
+DB_SSLMODE=require</code></pre></div>
+      <div class="notice warn">
+        Pastikan <code>config/database.php</code> project kamu membaca <code>DB_SSLMODE</code> untuk koneksi PostgreSQL external. Jika belum, tambahkan <code>'sslmode' => env('DB_SSLMODE', 'prefer')</code> pada config pgsql.
+      </div>
+    </div>
+
+    <div class="tab-panel" id="mongodb">
+      <p>MongoDB biasanya dipakai via package Laravel MongoDB. Extension PHP yang dibutuhkan adalah <code>mongodb</code>.</p>
+      <div class="codebox"><div class="code-title"><span>Verify MongoDB extension</span><button class="copy">Copy</button></div>
+<pre><code>php -m | grep -i mongodb</code></pre></div>
+      <div class="codebox"><div class="code-title"><span>.env MongoDB example</span><button class="copy">Copy</button></div>
+<pre><code>MONGODB_URI="mongodb+srv://USER:PASSWORD@CLUSTER_HOST/DB_NAME?retryWrites=true&w=majority"
+MONGODB_DATABASE="nama_project_kamu"</code></pre></div>
+    </div>
+  </section>
+
+  <section id="redis">
+    <h2>10. Redis Support</h2>
+    <div class="codebox"><div class="code-title"><span>Install Redis server local</span><button class="copy">Copy</button></div>
+<pre><code>sudo apt install -y redis-server
+sudo systemctl enable redis-server
+sudo systemctl start redis-server
+redis-cli ping</code></pre></div>
+
+    <div class="codebox"><div class="code-title"><span>Basic Redis hardening/tuning</span><button class="copy">Copy</button></div>
+<pre><code>sudo nano /etc/redis/redis.conf</code></pre></div>
+    <div class="codebox"><div class="code-title"><span>Recommended Redis config snippets</span><button class="copy">Copy</button></div>
+<pre><code>supervised systemd
+bind 127.0.0.1 ::1
+protected-mode yes
+maxmemory 128mb
+maxmemory-policy allkeys-lru</code></pre></div>
+    <div class="codebox"><div class="code-title"><span>Restart Redis</span><button class="copy">Copy</button></div>
+<pre><code>sudo systemctl restart redis-server
+redis-cli ping</code></pre></div>
+
+    <div class="codebox"><div class="code-title"><span>.env Redis Laravel</span><button class="copy">Copy</button></div>
+<pre><code>CACHE_STORE=redis
+QUEUE_CONNECTION=redis
+SESSION_DRIVER=redis
+
+REDIS_CLIENT=phpredis
+REDIS_HOST=127.0.0.1
+REDIS_PASSWORD=null
+REDIS_PORT=6379</code></pre></div>
+  </section>
+
+  <section id="project">
+    <h2>11. Setup Project Laravel</h2>
+    <div class="notice">
+      Semua command di bagian ini pakai <code>PROJECT_NAME</code>. Ganti dulu nilainya sebelum menjalankan.
+    </div>
+
+    <div class="codebox"><div class="code-title"><span>Create project directory</span><button class="copy">Copy</button></div>
+<pre><code>export PROJECT_NAME="nama_project_kamu"
+export PROJECT_REPO="git@github.com:username/repository.git"
+export PROJECT_BRANCH="main"
+export PROJECT_PATH="/var/www/${PROJECT_NAME}"
+
+echo "Setting up project: ${PROJECT_NAME}"
+echo "Path: ${PROJECT_PATH}"
+
+sudo mkdir -p "${PROJECT_PATH}"
+sudo chown -R ubuntu:ubuntu "${PROJECT_PATH}"
+
+git clone -b "${PROJECT_BRANCH}" "${PROJECT_REPO}" "${PROJECT_PATH}"
+cd "${PROJECT_PATH}"</code></pre></div>
+
+    <div class="codebox"><div class="code-title"><span>Install Laravel dependencies</span><button class="copy">Copy</button></div>
+<pre><code>cd "${PROJECT_PATH}"
+
+composer install
+
+# Build asset dengan npm atau pnpm sesuai lockfile
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
+if [ -f ".nvmrc" ]; then
+  nvm install
+  nvm use
+else
+  nvm install --lts
+  nvm use --lts
+fi
+
+if [ -f "pnpm-lock.yaml" ]; then
+  corepack enable
+  corepack prepare pnpm@latest --activate
+  pnpm install --frozen-lockfile
+  pnpm run build
+elif [ -f "package-lock.json" ]; then
+  npm ci
+  npm run build
+else
+  npm install
+  npm run build
+fi
+
+cp .env.example .env
+php artisan key:generate</code></pre></div>
+
+    <div class="notice warn">
+      Untuk staging yang dekat production, setelah setup awal gunakan <code>composer install --no-dev --optimize-autoloader</code>.
+      Jangan pakai <code>sudo composer install</code>.
+    </div>
+  </section>
+
+  <section id="permissions">
+    <h2>12. Folder Permission yang Bisa Jalan</h2>
+    <div class="codebox"><div class="code-title"><span>Production-like permission fix</span><button class="copy">Copy</button></div>
+<pre><code>cd "${PROJECT_PATH}"
+
+sudo mkdir -p storage/app/public \
+storage/framework/cache/data \
+storage/framework/sessions \
+storage/framework/views \
+storage/logs \
+bootstrap/cache
+
+sudo touch storage/logs/laravel.log
+
+# Owner codebase: deploy user + web group
+sudo chown -R ubuntu:www-data "${PROJECT_PATH}"
+
+# Default safe permissions
+sudo find "${PROJECT_PATH}" -type d -exec chmod 755 {} \;
+sudo find "${PROJECT_PATH}" -type f -exec chmod 644 {} \;
+
+# Writable Laravel runtime folders
+sudo chmod -R ug+rwx storage bootstrap/cache
+sudo find storage bootstrap/cache -type d -exec chmod 2775 {} \;
+sudo find storage bootstrap/cache -type f -exec chmod 664 {} \;
+
+# Optional ACL agar ubuntu dan www-data sama-sama bisa write runtime folders
+sudo setfacl -R -m u:ubuntu:rwx -m u:www-data:rwx storage bootstrap/cache
+sudo setfacl -dR -m u:ubuntu:rwx -m u:www-data:rwx storage bootstrap/cache
+
+sudo usermod -aG www-data ubuntu
+
+php artisan optimize:clear
+php artisan storage:link</code></pre></div>
+
+    <div class="notice">
+      Setelah <code>usermod</code>, logout SSH lalu login ulang agar group <code>www-data</code> aktif untuk user <code>ubuntu</code>.
+    </div>
+  </section>
+
+  <section id="env">
+    <h2>13. ENV Templates</h2>
+    <h3>Staging via IP:8000 + Redis</h3>
+    <div class="codebox"><div class="code-title"><span>.env base staging</span><button class="copy">Copy</button></div>
+<pre><code>APP_NAME="${PROJECT_NAME}"
+APP_ENV=staging
+APP_KEY=
+APP_DEBUG=false
+APP_URL=http://YOUR_LIGHTSAIL_PUBLIC_IP:8000
+
+LOG_CHANNEL=stack
+LOG_LEVEL=debug
+
+CACHE_STORE=redis
+QUEUE_CONNECTION=redis
+SESSION_DRIVER=redis
+SESSION_DOMAIN=
+SESSION_SECURE_COOKIE=false
+
+REDIS_CLIENT=phpredis
+REDIS_HOST=127.0.0.1
+REDIS_PASSWORD=null
+REDIS_PORT=6379
+
+# Choose one database option from database section
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=nama_project_kamu_db
+DB_USERNAME=nama_project_kamu_user
+DB_PASSWORD=CHANGE_THIS_STRONG_PASSWORD
+
+TELESCOPE_ENABLED=true</code></pre></div>
+
+    <div class="codebox"><div class="code-title"><span>Apply config</span><button class="copy">Copy</button></div>
+<pre><code>cd "${PROJECT_PATH}"
+php artisan optimize:clear
+php artisan config:cache</code></pre></div>
+  </section>
+
+  <section id="nginx-laravel">
+    <h2>14. Nginx Laravel Port 8000</h2>
+    <div class="codebox"><div class="code-title"><span>Create reusable Nginx config with PROJECT_NAME</span><button class="copy">Copy</button></div>
+<pre><code>export PROJECT_NAME="nama_project_kamu"
+export PROJECT_PATH="/var/www/${PROJECT_NAME}"
+export APP_PORT="8000"
+
+sudo tee "/etc/nginx/conf.d/${PROJECT_NAME}.conf" >/dev/null <<EOF
+server {
+    listen ${APP_PORT};
+    listen [::]:${APP_PORT};
+
+    server_name _;
+
+    root ${PROJECT_PATH}/public;
+    index index.php;
+
+    charset utf-8;
+    client_max_body_size 32M;
+
+    access_log /var/log/nginx/${PROJECT_NAME}_access.log;
+    error_log  /var/log/nginx/${PROJECT_NAME}_error.log warn;
+
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+    gzip on;
+    gzip_types text/plain text/css application/json application/javascript application/xml image/svg+xml;
+    gzip_min_length 1024;
+
+    location / {
+        try_files \$uri \$uri/ /index.php?\$query_string;
+    }
+
+    location = /favicon.ico { access_log off; log_not_found off; }
+    location = /robots.txt  { access_log off; log_not_found off; }
+
+    error_page 404 /index.php;
+
+    location ~ ^/index\.php(/|$) {
+        fastcgi_pass unix:/run/php/php8.4-fpm.sock;
+        fastcgi_param SCRIPT_FILENAME \$realpath_root\$fastcgi_script_name;
+        include fastcgi_params;
+        fastcgi_hide_header X-Powered-By;
+
+        fastcgi_connect_timeout 60s;
+        fastcgi_send_timeout 120s;
+        fastcgi_read_timeout 120s;
+        fastcgi_buffer_size 32k;
+        fastcgi_buffers 8 32k;
+    }
+
+    location ~ /\.(?!well-known).* {
+        deny all;
+    }
+
+    location ~* \.(?:jpg|jpeg|gif|png|webp|ico|css|js|svg|woff|woff2|ttf)$ {
+        expires 7d;
+        access_log off;
+        add_header Cache-Control "public";
+        try_files \$uri /index.php?\$query_string;
+    }
+}
+EOF
+
+sudo nginx -t
+sudo systemctl reload nginx
+sudo ss -tulpn | grep ":${APP_PORT}"</code></pre></div>
+
+    <div class="codebox"><div class="code-title"><span>UFW port 8000</span><button class="copy">Copy</button></div>
+<pre><code>sudo ufw allow 8000/tcp
+sudo ufw status</code></pre></div>
+  </section>
+
+  <section id="deploy">
+    <h2>15. Deploy Script Reusable</h2>
+    <div class="codebox"><div class="code-title"><span>Create deploy.sh</span><button class="copy">Copy</button></div>
+<pre><code>export PROJECT_NAME="nama_project_kamu"
+export PROJECT_PATH="/var/www/${PROJECT_NAME}"
+
+cat > "${PROJECT_PATH}/deploy.sh" <<'EOF'
+#!/bin/bash
+set -euo pipefail
+
+PROJECT_NAME="${PROJECT_NAME:-nama_project_kamu}"
+PROJECT_PATH="${PROJECT_PATH:-/var/www/${PROJECT_NAME}}"
+BRANCH="${PROJECT_BRANCH:-main}"
+
+cd "${PROJECT_PATH}"
+
+echo "Deploying project: ${PROJECT_NAME}"
+echo "Path: ${PROJECT_PATH}"
+
+php artisan down || true
+
+git fetch origin
+git reset --hard "origin/${BRANCH}"
+
+composer install --no-dev --optimize-autoloader
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
+if [ -f ".nvmrc" ]; then
+  nvm install
+  nvm use
+else
+  nvm install --lts
+  nvm use --lts
+fi
+
+if [ -f "pnpm-lock.yaml" ]; then
+  corepack enable
+  corepack prepare pnpm@latest --activate
+  pnpm install --frozen-lockfile
+  pnpm run build
+elif [ -f "package-lock.json" ]; then
+  npm ci
+  npm run build
+else
+  npm install
+  npm run build
+fi
+
+php artisan migrate --force
+
+php artisan optimize:clear
+php artisan config:cache
+php artisan route:cache || true
+php artisan view:cache
+php artisan event:cache || true
+
+sudo chown -R ubuntu:www-data "${PROJECT_PATH}"
+sudo chown -R www-data:www-data "${PROJECT_PATH}/storage" "${PROJECT_PATH}/bootstrap/cache"
+sudo chmod -R ug+rwx "${PROJECT_PATH}/storage" "${PROJECT_PATH}/bootstrap/cache"
+
+sudo systemctl restart php8.4-fpm
+sudo systemctl reload nginx
+
+sudo supervisorctl reread || true
+sudo supervisorctl update || true
+sudo supervisorctl restart "${PROJECT_NAME}-horizon:"* || true
+sudo supervisorctl restart "${PROJECT_NAME}-worker:"* || true
+
+php artisan up
+
+echo "Deployment completed: ${PROJECT_NAME}"
+EOF
+
+chmod +x "${PROJECT_PATH}/deploy.sh"</code></pre></div>
+
+    <div class="codebox"><div class="code-title"><span>Run deploy</span><button class="copy">Copy</button></div>
+<pre><code>export PROJECT_NAME="nama_project_kamu"
+export PROJECT_PATH="/var/www/${PROJECT_NAME}"
+export PROJECT_BRANCH="main"
+
+"${PROJECT_PATH}/deploy.sh"</code></pre></div>
+  </section>
+
+  <section id="horizon">
+    <h2>16. Laravel Horizon Support</h2>
+    <p>Horizon butuh Redis. Untuk staging production-like, jalankan Horizon via Supervisor, bukan terminal manual.</p>
+    <div class="codebox"><div class="code-title"><span>Install Horizon</span><button class="copy">Copy</button></div>
+<pre><code>cd "${PROJECT_PATH}"
+
+composer require laravel/horizon
+php artisan horizon:install
+php artisan migrate
+php artisan config:cache</code></pre></div>
+
+    <div class="codebox"><div class="code-title"><span>Supervisor config untuk Horizon</span><button class="copy">Copy</button></div>
+<pre><code>export PROJECT_NAME="nama_project_kamu"
+export PROJECT_PATH="/var/www/${PROJECT_NAME}"
+
+sudo tee "/etc/supervisor/conf.d/${PROJECT_NAME}-horizon.conf" >/dev/null <<EOF
+[program:${PROJECT_NAME}-horizon]
+process_name=%(program_name)s
+command=php ${PROJECT_PATH}/artisan horizon
+autostart=true
+autorestart=true
+stopasgroup=true
+killasgroup=true
+user=www-data
+redirect_stderr=true
+stdout_logfile=${PROJECT_PATH}/storage/logs/horizon.log
+stopwaitsecs=3600
+EOF
+
+sudo supervisorctl reread
+sudo supervisorctl update
+sudo supervisorctl start "${PROJECT_NAME}-horizon"
+sudo supervisorctl status</code></pre></div>
+
+    <div class="notice warn">
+      Batasi akses <code>/horizon</code> lewat Gate/authorization Laravel atau Basic Auth di Nginx. Jangan biarkan dashboard Horizon terbuka publik.
+    </div>
+  </section>
+
+  <section id="telescope">
+    <h2>17. Laravel Telescope Support</h2>
+    <p>Telescope berguna di staging untuk debug request, query, job, mail, exception, cache, dan queue. Jangan aktifkan terbuka di production publik.</p>
+    <div class="codebox"><div class="code-title"><span>Install Telescope</span><button class="copy">Copy</button></div>
+<pre><code>cd "${PROJECT_PATH}"
+
+composer require laravel/telescope
+php artisan telescope:install
+php artisan migrate
+php artisan config:cache</code></pre></div>
+
+    <div class="codebox"><div class="code-title"><span>.env Telescope staging</span><button class="copy">Copy</button></div>
+<pre><code>TELESCOPE_ENABLED=true</code></pre></div>
+
+    <div class="notice danger">
+      Pastikan <code>TelescopeServiceProvider::gate()</code> membatasi user yang boleh akses. Untuk staging via IP publik, idealnya tambahkan Basic Auth di Nginx juga.
+    </div>
+
+    <h3>Optional: Basic Auth hanya untuk dashboard internal</h3>
+    <div class="codebox"><div class="code-title"><span>Create basic auth user</span><button class="copy">Copy</button></div>
+<pre><code>sudo apt install -y apache2-utils
+sudo htpasswd -c /etc/nginx/.htpasswd-staging fajar</code></pre></div>
+    <div class="codebox"><div class="code-title"><span>Nginx location snippets</span><button class="copy">Copy</button></div>
+<pre><code>location ^~ /horizon {
+    auth_basic "Horizon";
+    auth_basic_user_file /etc/nginx/.htpasswd-staging;
+    try_files $uri $uri/ /index.php?$query_string;
+}
+
+location ^~ /telescope {
+    auth_basic "Telescope";
+    auth_basic_user_file /etc/nginx/.htpasswd-staging;
+    try_files $uri $uri/ /index.php?$query_string;
+}</code></pre></div>
+  </section>
+
+  <section id="production-support">
+    <h2>18. Supporting Apps Production-ready</h2>
+    <div class="grid two">
+      <div class="card">
+        <h3>Process Manager</h3>
+        <p><code>supervisor</code> untuk Horizon/queue worker.</p>
+      </div>
+      <div class="card">
+        <h3>Scheduler</h3>
+        <p><code>cron</code> untuk <code>php artisan schedule:run</code> setiap menit.</p>
+      </div>
+      <div class="card">
+        <h3>Firewall</h3>
+        <p>Lightsail firewall + <code>ufw</code>. Batasi SSH dan staging port jika bisa.</p>
+      </div>
+      <div class="card">
+        <h3>Intrusion Protection</h3>
+        <p><code>fail2ban</code> untuk proteksi SSH basic.</p>
+      </div>
+      <div class="card">
+        <h3>Logs</h3>
+        <p>Nginx access/error log per project, Laravel log, Horizon log, dan logrotate.</p>
+      </div>
+      <div class="card">
+        <h3>Backups</h3>
+        <p>Minimal snapshot Lightsail + dump database terjadwal untuk staging penting.</p>
+      </div>
+    </div>
+
+    <h3>Laravel Scheduler</h3>
+    <div class="codebox"><div class="code-title"><span>Crontab scheduler</span><button class="copy">Copy</button></div>
+<pre><code>crontab -e
+
+* * * * * cd /var/www/nama_project_kamu && php artisan schedule:run >> /dev/null 2>&1</code></pre></div>
+
+    <h3>Unattended security updates</h3>
+    <div class="codebox"><div class="code-title"><span>Enable security updates</span><button class="copy">Copy</button></div>
+<pre><code>sudo apt install -y unattended-upgrades
+sudo dpkg-reconfigure --priority=low unattended-upgrades</code></pre></div>
+
+    <h3>Health check</h3>
+    <div class="codebox"><div class="code-title"><span>System health check</span><button class="copy">Copy</button></div>
+<pre><code>free -h
+df -h
+uptime
+sudo systemctl status nginx
+sudo systemctl status php8.4-fpm
+sudo systemctl status redis-server
+sudo supervisorctl status
+sudo ss -tulpn
+tail -n 100 "${PROJECT_PATH}/storage/logs/laravel.log"</code></pre></div>
+  </section>
+
+  <section id="troubleshooting">
+    <h2>19. Troubleshooting</h2>
+    <h3>Permission denied laravel.log / bootstrap cache</h3>
+    <div class="codebox"><div class="code-title"><span>Fix Laravel writable dirs</span><button class="copy">Copy</button></div>
+<pre><code>cd "${PROJECT_PATH}"
+
+sudo mkdir -p storage/logs bootstrap/cache storage/framework/cache/data storage/framework/sessions storage/framework/views
+sudo touch storage/logs/laravel.log
+
+sudo chown -R ubuntu:www-data "${PROJECT_PATH}"
+sudo chmod -R ug+rwx storage bootstrap/cache
+sudo find storage bootstrap/cache -type d -exec chmod 2775 {} \;
+sudo find storage bootstrap/cache -type f -exec chmod 664 {} \;
+
+php artisan optimize:clear</code></pre></div>
+
+    <h3>502 Bad Gateway</h3>
+    <div class="codebox"><div class="code-title"><span>Check PHP-FPM socket</span><button class="copy">Copy</button></div>
+<pre><code>sudo systemctl status php8.4-fpm
+ls -la /run/php
+sudo nginx -t
+sudo tail -f /var/log/nginx/${PROJECT_NAME}_error.log</code></pre></div>
+
+    <h3>Port 8000 tidak bisa dibuka</h3>
+    <div class="codebox"><div class="code-title"><span>Debug port</span><button class="copy">Copy</button></div>
+<pre><code>sudo ss -tulpn | grep :8000
+sudo ufw status
+sudo nginx -t
+sudo systemctl reload nginx</code></pre></div>
+    <p>Pastikan juga Lightsail Networking → IPv4 Firewall punya custom TCP rule port <code>8000</code>.</p>
+
+    <h3>Composer gagal buat vendor</h3>
+    <div class="codebox"><div class="code-title"><span>Fix composer ownership</span><button class="copy">Copy</button></div>
+<pre><code>sudo chown -R ubuntu:ubuntu "${PROJECT_PATH}"
+cd "${PROJECT_PATH}"
+composer install</code></pre></div>
+
+    <h3>Route cache error karena closure</h3>
+    <div class="codebox"><div class="code-title"><span>Fallback cache commands</span><button class="copy">Copy</button></div>
+<pre><code>php artisan optimize:clear
+php artisan config:cache
+php artisan view:cache
+php artisan event:cache || true</code></pre></div>
+  </section>
+
+  <section id="checklist">
+    <h2>20. Final Checklist</h2>
+    <div class="checklist">
+      <label><input type="checkbox" /> <code>PROJECT_NAME</code> sudah diisi sesuai nama project asli.</label>
+      <label><input type="checkbox" /> Lightsail Ubuntu 24.04 fresh sudah update.</label>
+      <label><input type="checkbox" /> Lightsail firewall membuka TCP 8000.</label>
+      <label><input type="checkbox" /> Nginx terinstall dari official stable repo nginx.org.</label>
+      <label><input type="checkbox" /> PHP 8.4 terinstall dari Ondřej PHP PPA, bukan php.new.</label>
+      <label><input type="checkbox" /> <code>which php</code> mengarah ke <code>/usr/bin/php</code>.</label>
+      <label><input type="checkbox" /> <code>php8.4-fpm</code> aktif dan socket tersedia di <code>/run/php/php8.4-fpm.sock</code>.</label>
+      <label><input type="checkbox" /> PHP modules database yang dibutuhkan sudah aktif.</label>
+      <label><input type="checkbox" /> Redis server aktif jika memakai Horizon/queue/cache/session Redis.</label>
+      <label><input type="checkbox" /> Project berada di <code>/var/www/PROJECT_NAME</code>.</label>
+      <label><input type="checkbox" /> Nginx root mengarah ke <code>/var/www/PROJECT_NAME/public</code>.</label>
+      <label><input type="checkbox" /> <code>storage</code> dan <code>bootstrap/cache</code> writable.</label>
+      <label><input type="checkbox" /> NVM, Node LTS, dan build asset via npm/pnpm berhasil.</label>
+      <label><input type="checkbox" /> <code>composer install</code> dan migration berhasil.</label>
+      <label><input type="checkbox" /> Horizon dan Telescope dilindungi aksesnya.</label>
+      <label><input type="checkbox" /> Aplikasi bisa diakses via <code>http://IP_PUBLIC:8000</code>.</label>
+    </div>
+
+    <h3>Final command check</h3>
+    <div class="codebox"><div class="code-title"><span>Final health check</span><button class="copy">Copy</button></div>
+<pre><code>echo "Project: ${PROJECT_NAME}"
+echo "Path: ${PROJECT_PATH}"
+
+which php
+php -v
+php -m | grep -Ei "mysql|pgsql|sqlite|redis|mongodb|sqlsrv|pdo_sqlsrv|opcache"
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+node -v
+npm -v
+pnpm -v || true
+
+nginx -v
+sudo nginx -t
+sudo systemctl status nginx
+sudo systemctl status php8.4-fpm
+sudo systemctl status redis-server || true
+sudo supervisorctl status || true
+sudo ss -tulpn | grep ":8000"
+
+cd "${PROJECT_PATH}"
+php artisan about
+php artisan route:list</code></pre></div>
+  </section>
+
+  <section>
+    <h2>21. References</h2>
+    <ul>
+      <li>Laravel Deployment Docs: server requirements, PHP extension requirement, public directory, optimization, writable folders.</li>
+      <li>nginx.org Linux Packages: official stable repository, signing key, repo pinning, Ubuntu noble support.</li>
+      <li>Microsoft PHP SQL Server Drivers: PHP 8.4 + Ubuntu 24.04 support and PECL installation flow.</li>
+      <li>Laravel Horizon, Telescope, Queue, and Scheduler official docs should be checked when upgrading framework versions.</li>
+    </ul>
+  </section>
+
+  <p class="footer">
+    Reusable playbook. Tip: tekan <span class="kbd">Ctrl</span> + <span class="kbd">P</span> untuk export ke PDF.
+  </p>
+</main>
+</div>
+
+<script>
+  document.querySelectorAll('.copy').forEach(btn=>{
+    btn.addEventListener('click',async()=>{
+      const code=btn.closest('.codebox').querySelector('code').innerText;
+      await navigator.clipboard.writeText(code);
+      const old=btn.innerText;btn.innerText='Copied!';setTimeout(()=>btn.innerText=old,1200);
+    });
+  });
+  document.querySelectorAll('.tab').forEach(tab=>{
+    tab.addEventListener('click',()=>{
+      const parent=tab.parentElement, container=parent.parentElement, id=tab.dataset.tab;
+      parent.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+      tab.classList.add('active');
+      container.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+      container.querySelector('#'+id).classList.add('active');
+    });
+  });
+  const sections=[...document.querySelectorAll('main section,.hero')], links=[...document.querySelectorAll('nav a')];
+  const obs=new IntersectionObserver(entries=>{
+    entries.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+e.target.id));}});
+  },{rootMargin:'-20% 0px -70% 0px'});
+  sections.forEach(s=>obs.observe(s));
+  document.getElementById('search').addEventListener('input',e=>{
+    const q=e.target.value.toLowerCase().trim();
+    document.querySelectorAll('main section,.hero').forEach(sec=>{sec.style.display=!q||sec.innerText.toLowerCase().includes(q)?'':'none';});
+  });
+  document.querySelectorAll('.checklist input[type="checkbox"]').forEach((box,i)=>{
+    const key='laravel-lightsail-ondrej-check-'+i;
+    box.checked=localStorage.getItem(key)==='1';
+    box.addEventListener('change',()=>localStorage.setItem(key,box.checked?'1':'0'));
+  });
+</script>
+</body>
+</html>
